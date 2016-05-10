@@ -1,6 +1,8 @@
 # encoding: utf-8
-
+import socket
 import unittest
+import urllib2
+
 import opengraph
 
 
@@ -19,8 +21,8 @@ HTML = """
 class test(unittest.TestCase):
 		
     def test_url(self):
-        data = opengraph.OpenGraph(url='http://vimeo.com/896837')
-        self.assertEqual(data['url'], 'http://vimeo.com/896837')
+        data = opengraph.OpenGraph(url='https://vimeo.com/896837')
+        self.assertEqual(data['url'], 'https://vimeo.com/896837')
         
     def test_isinstace(self):
         data = opengraph.OpenGraph()
@@ -41,10 +43,37 @@ class test(unittest.TestCase):
         self.assertEqual(og.to_json(),"{'error':'there isn't json module'}")
         
     def test_is_valid(self):
-        og = opengraph.OpenGraph(url='http://grooveshark.com')
+        og = opengraph.OpenGraph(url='https://www.simkarma.com/')
         self.assertTrue(og.is_valid())
 
+    def test_user_agent(self):
+        try:
+            og = opengraph.OpenGraph(url="http://stackoverflow.com/questions/18377113/get-text-between-brackets",
+                                     user_agent="Python-urllib/2.7")
+            self.assertTrue(og.is_valid())
+            self.fail()
+        except urllib2.HTTPError as e:
+            if e.code == 403:
+                pass
+            else:
+                raise e
 
+        og = opengraph.OpenGraph(url="http://stackoverflow.com/questions/18377113/get-text-between-brackets")
+        self.assertTrue(og.is_valid())
+
+    def test_timeout(self):
+        try:
+            og = opengraph.OpenGraph(url="http://deelay.me/5000/https://www.simkarma.com",
+                                     timeout=1)
+            self.fail("This should timeout")
+        except urllib2.URLError, e:
+            pass
+        except socket.timeout:
+            pass
+
+        og = opengraph.OpenGraph(url="http://deelay.me/5000/https://www.simkarma.com",
+                                 timeout=10)
+        self.assertTrue(og.is_valid())
 
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()

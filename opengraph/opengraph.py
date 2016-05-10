@@ -17,6 +17,8 @@ except ImportError:
 class OpenGraph(dict):
     """
     """
+    default_user_agent = "facebookexternalhit/1.1"
+    default_timeout = 15
 
     required_attrs = ['title', 'type', 'image', 'url', 'description']
 
@@ -29,6 +31,9 @@ class OpenGraph(dict):
 
         for k in kwargs.keys():
             self[k] = kwargs[k]
+
+        self['user_agent'] = kwargs.get("user_agent") or self.default_user_agent
+        self['timeout'] = kwargs.get("timeout") or self.default_timeout
         
         dict.__init__(self)
                 
@@ -47,7 +52,8 @@ class OpenGraph(dict):
     def fetch(self, url):
         """
         """
-        raw = urllib2.urlopen(url)
+        req = urllib2.Request(url, headers={'User-Agent': self.user_agent})
+        raw = urllib2.urlopen(req, timeout=self.timeout)
         html = raw.read()
         return self.parser(html)
         
